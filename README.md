@@ -6,7 +6,10 @@ Sensaura is a real-time object detection application built using Streamlit and Y
 
 ## b. Team Members
 
-*   Anant Hegde - anhunchalli@gmail.com
+*   Anant Nagaraj Hegde - anhunchalli@gmail.com
+*   Amruthesh C Hiremath - amrutheshchiremathbtech24@rvu.edu.in
+*   Omkar Suresh Naik - omkarsnaik234@gmail.com
+*   Nikhil Sridhara - Nikhilsridhara098@gmail.com
 
 ## c. Setup Instructions
 
