@@ -1,4 +1,4 @@
-# Sensaura - Live Object Detection Application
+# Sensaura - Privacy-First Intelligence for Human Navigation
 
 ## a. Application Description
 
