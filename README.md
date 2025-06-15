@@ -73,6 +73,10 @@ Sensaura is a real-time object detection application built using Streamlit and Y
 
 ## e. Demo of SensAura in action:
 
+## f. Future advancements using android app:
+
+This mobile app is an extra showcase to demonstrate the potential of SensAura AI if implemented on a mobile platform. It is not part of the official hackathon submission for the Edge AI Developer Hackathon (June 14-15, 2025, Qualcomm Bengaluru), as it runs on a mobile device (not a Snapdragon X Elite-powered Copilot+ PC) and uses cloud-based Gemini APIs, which do not comply with the hackathon’s edge AI requirements. Our official submission focuses on live image processing and voice output implemented on the provided laptop. This README is provided to illustrate additional features (live object detection for navigation and fall detection with emergency SMS) that could enhance SensAura AI’s vision for assisting visually impaired and dementia-affected individuals.
+
 ## Architecture
 
 ```mermaid
