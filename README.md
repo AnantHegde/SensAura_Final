@@ -2,7 +2,7 @@
 
 ## a. Application Description
 
-Sensaura is a real-time object detection application built using Streamlit and YOLOv8. It allows users to detect objects in live video streams from webcams, RTSP streams, YouTube videos, or stored video files. The application provides a user-friendly interface to adjust detection confidence and displays the detected objects with bounding boxes, along with textual information and Text-to-Speech (TTS) output for accessibility.
+Sensaura is a real-time object detection application built using Streamlit and YOLOv8. It allows users to detect objects in live video streams from webcams, RTSP streams. The application provides a user-friendly interface to adjust detection confidence and displays the detected objects with bounding boxes, along with textual information and Text-to-Speech (TTS) output for accessibility.
 
 ## b. Team Members
 
