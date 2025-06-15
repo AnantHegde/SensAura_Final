@@ -71,6 +71,8 @@ Sensaura is a real-time object detection application built using Streamlit and Y
         *   **RTSP Stream:** Enter an RTSP stream URL to detect objects in the live stream.
         *   **Video:** Choose a stored video file to detect objects.
 
+## e. Demo of SensAura in action:
+
 ## Architecture
 
 ```mermaid
