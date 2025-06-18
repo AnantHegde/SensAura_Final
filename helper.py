@@ -17,7 +17,6 @@ import patch_ultralytics
 
 import streamlit as st
 import cv2
-import yt_dlp
 import settings
 from yolo_model import YOLOModel
 from ultralytics import YOLO
@@ -43,10 +42,11 @@ def load_model(model_path):
 class TTSEngineManager:
     """Thread-safe manager for pyttsx3 engine with better error handling."""
     
-    def _init_(self):
+    def __init__(self):
         self._engine_lock = threading.Lock()
         self._engine = None
         self._active = False
+
         
     def get_engine(self) -> Optional[pyttsx3.Engine]:
         """Get or create a TTS engine instance."""
@@ -54,7 +54,7 @@ class TTSEngineManager:
             if self._engine is None:
                 try:
                     self._engine = pyttsx3.init()
-                    self._engine.setProperty('rate', 150)
+                    self._engine.setProperty('rate', 200)
                     self._engine.setProperty('volume', 0.9)
                     self._active = True
                 except Exception as e:
@@ -76,7 +76,7 @@ class TTSEngineManager:
 class SpeakWorker:
     """Improved background thread for TTS with better queue management."""
     
-    def _init_(self, cooldown: float = 5.0):
+    def __init__(self, cooldown: float = 8.0):
         self.cooldown = cooldown
         self._queue = queue.Queue()
         self._last_text = ""
@@ -85,7 +85,7 @@ class SpeakWorker:
         self._running = True
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
-        
+
     def speak(self, text: str):
         """Enqueue text for speaking (non-blocking)."""
         if text and self._running:
@@ -196,8 +196,7 @@ def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=N
     res_plotted = res[0].plot()
     st_frame.image(res_plotted,
                    caption='Detected Video',
-                   channels="BGR",
-                   use_container_width=True)
+                   channels="BGR")
 
 def get_youtube_stream_url(youtube_url):
     ydl_opts = {
@@ -209,66 +208,6 @@ def get_youtube_stream_url(youtube_url):
         info = ydl.extract_info(youtube_url, download=False)
         return info['url']
 
-def play_youtube_video(conf, model):
-    source_youtube = st.sidebar.text_input("YouTube Video url")
-    is_display_tracker, tracker = display_tracker_options()
-
-    if st.sidebar.button('Detect Objects'):
-        if not source_youtube:
-            st.sidebar.error("Please enter a YouTube URL")
-            return
-
-        try:
-            stream_url = get_youtube_stream_url(source_youtube)
-            vid_cap = cv2.VideoCapture(stream_url)
-
-            if not vid_cap.isOpened():
-                st.sidebar.error("Failed to open video stream. Please try a different video.")
-                return
-
-            st.sidebar.success("Video stream opened successfully!")
-            st_frame = st.empty()
-            while vid_cap.isOpened():
-                success, image = vid_cap.read()
-                if success:
-                    _display_detected_frames(
-                        conf,
-                        model,
-                        st_frame,
-                        image,
-                        is_display_tracker,
-                        tracker
-                    )
-                else:
-                    break
-            vid_cap.release()
-
-        except Exception as e:
-            st.sidebar.error(f"An error occurred: {str(e)}")
-
-def play_rtsp_stream(conf, model):
-    source_rtsp = st.sidebar.text_input("rtsp stream url:")
-    st.sidebar.caption('Example URL: rtsp://admin:12345@192.168.1.210:554/Streaming/Channels/101')
-    is_display_tracker, tracker = display_tracker_options()
-    if st.sidebar.button('Detect Objects'):
-        try:
-            vid_cap = cv2.VideoCapture(source_rtsp)
-            st_frame = st.empty()
-            while (vid_cap.isOpened()):
-                success, image = vid_cap.read()
-                if success:
-                    _display_detected_frames(conf,
-                                           model,
-                                           st_frame,
-                                           image,
-                                           is_display_tracker,
-                                           tracker)
-                else:
-                    vid_cap.release()
-                    break
-        except Exception as e:
-            vid_cap.release()
-            st.sidebar.error("Error loading RTSP stream: " + str(e))
 
 def play_webcam(conf, model):
     source_webcam = settings.WEBCAM_PATH
@@ -288,8 +227,7 @@ def play_webcam(conf, model):
                     res_plotted = res[0].plot()
                     st_frame.image(res_plotted,
                                 caption='Detected Video',
-                                channels="BGR",
-                                use_container_width=True)
+                                channels="BGR")
                 else:
                     break
         except Exception as e:
@@ -349,14 +287,10 @@ def main():
     app_mode = st.sidebar.selectbox("Choose the app mode",
         ["YouTube", "RTSP Stream", "Webcam", "Video"])
     
-    if app_mode == "YouTube":
-        play_youtube_video(confidence, model)
-    elif app_mode == "RTSP Stream":
-        play_rtsp_stream(confidence, model)
-    elif app_mode == "Webcam":
+    if app_mode == "Webcam":
         play_webcam(confidence, model)
     elif app_mode == "Video":
         play_stored_video(confidence, model)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 
 # Get the absolute path of the current file
-FILE = Path(_file_).resolve()
+FILE = Path(__file__).resolve()
 # Get the parent directory of the current file
 ROOT = FILE.parent
 # Add the root path to the sys.path list if it is not already there
@@ -13,10 +13,9 @@ ROOT = ROOT.relative_to(Path.cwd())
 
 # Sources
 WEBCAM = 'Webcam'
-RTSP = 'RTSP'
-YOUTUBE = 'YouTube'
 
-SOURCES_LIST = [WEBCAM, RTSP, YOUTUBE]
+
+SOURCES_LIST = [WEBCAM]
 
 # ML Model config
 MODEL_DIR = ROOT / 'weights'

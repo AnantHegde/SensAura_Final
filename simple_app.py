@@ -91,7 +91,7 @@ def run_detection():
                 # For now, let's ensure the placeholder is updated even for skipped frames to avoid stale image.
                 # We'll resize it to what _display_detected_frames would do for consistency in display size.
                 display_frame = cv2.resize(frame, (720, int(720*(9/16))))
-                frame_placeholder.image(display_frame, channels="BGR", use_container_width=True)
+                frame_placeholder.image(display_frame, channels="BGR")
 
             # Add a small delay to control frame rate and allow UI updates
             time.sleep(0.01) 

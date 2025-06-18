@@ -32,74 +32,87 @@ from helper import get_speak_worker
 # Configure Streamlit page
 st.set_page_config(
     page_title="Live Object Detection",
-    page_icon="🎥",
-    layout="wide"
+    page_icon="🎯",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Constants for distance estimation
-KNOWN_WIDTH = 0.1  # Known width of objects in meters (adjust based on your use case)
-FOCAL_LENGTH = 500  # Approximate focal length of the camera (adjust based on your camera)
-TARGET_FPS = 60
-FRAME_SKIP = 1  # Process every nth frame
+# Constants
+KNOWN_WIDTH = 0.1       # Width in meters of known object
+FOCAL_LENGTH = 600      # Approximate focal length of your camera
+TARGET_FPS = 60         # Target camera FPS
+FRAME_SKIP = 30         # Frame skip interval for detection
 
 def calculate_distance(pixel_width):
-    """Calculate distance using the pinhole camera model"""
+    """Estimate distance based on object's pixel width."""
     if pixel_width == 0:
         return float('inf')
     return (KNOWN_WIDTH * FOCAL_LENGTH) / pixel_width
 
-# Load YOLO model
 @st.cache_resource
 def load_model():
-    # Use the smallest and fastest model
     model_path = Path("weights/yolov8n.pt")
     model = YOLO(model_path)
-    # Set model parameters for speed
-    model.conf = 0.25  # Lower confidence threshold for faster processing
-    model.iou = 0.45   # Lower IOU threshold for faster processing
+    model.conf = 0.25
+    model.iou = 0.45
     return model
 
-# Main app
-st.title("Live Object Detection")
+# Header
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>🎥 Real-Time Object Detection</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Detect and localize objects using YOLOv8 in live webcam feed</p>", unsafe_allow_html=True)
+st.markdown("---")
+st.title("SensAura: Live Object Detection and Navigation")
+
+# Sidebar controls
+with st.sidebar:
+    st.header("⚙️ Settings")
+    confidence = st.slider("🎯 Detection Confidence", 0.0, 1.0, 0.25, 0.01)
+    frame_skip = st.slider("🎞️ Frame Skip Interval", 1, 60, FRAME_SKIP)
+    start_button = st.button("🚀 Start Camera")
+    stop_button = st.button("🛑 Stop Camera")
+
+
+# Initialize session state
+if 'camera_running' not in st.session_state:
+    st.session_state.camera_running = False
+
+# Toggle camera state
+if start_button:
+    st.session_state.camera_running = True
+if stop_button:
+    st.session_state.camera_running = False
+
 
 # Load model
 model = load_model()
 
-# Confidence threshold
-confidence = st.sidebar.slider("Detection Confidence", 0.0, 1.0, 0.25)
+# UI placeholders
+col1, col2 = st.columns([2, 1])
+frame_placeholder = col1.empty()
+info_placeholder = col2.container()
+fps_placeholder = col2.empty()
 
-# Create placeholders for information display
-info_placeholder = st.empty()
-frame_placeholder = st.empty()
-fps_placeholder = st.empty()
-
-# Start camera
-if st.sidebar.button("Start Camera"):
-    # Initialize camera
+# Start camera and detection loop
+if st.session_state.camera_running:
     cap = cv2.VideoCapture(0)
-    
-    # Set higher resolution for better quality
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     cap.set(cv2.CAP_PROP_FPS, TARGET_FPS)
-    
-    # Initialize FPS calculation variables
+
     prev_time = time.time()
     frame_count = 0
     fps = 0
     frame_skip_counter = 0
-    
+    annotated_frame = None
+
     try:
-        # Initialize variables for the loop
-        annotated_frame = None
-        
-        while cap.isOpened():
+        while cap.isOpened() and st.session_state.camera_running:
             ret, frame = cap.read()
             if not ret:
-                st.warning("Video stream ended or camera disconnected.")
+                st.warning("⚠️ Camera disconnected or video ended.")
                 break
 
-            # --- FPS Calculation ---
+            # FPS tracking
             frame_count += 1
             current_time = time.time()
             if current_time - prev_time >= 1.0:
@@ -108,16 +121,12 @@ if st.sidebar.button("Start Camera"):
                 prev_time = current_time
 
             frame_skip_counter += 1
-            
-            # --- Detection and Annotation (on specified frames) ---
-            if frame_skip_counter >= FRAME_SKIP:
+
+            if frame_skip_counter >= frame_skip:
                 frame_skip_counter = 0
-                
-                # Run detection
                 results = model.predict(frame, conf=confidence, verbose=False)
-                annotated_frame = results[0].plot()  # Update the annotated frame
-                
-                # Process detections for info and TTS
+                annotated_frame = results[0].plot()
+
                 detections = []
                 for r in results:
                     for box in r.boxes:
@@ -129,49 +138,38 @@ if st.sidebar.button("Start Camera"):
                             'x_center': (x1 + x2) / 2 / frame.shape[1]
                         })
 
-                # --- Update UI Text and TTS ---
+                # Display detection results
                 if detections:
-                    info_text = "Detected Objects:\n"
-                    tts_lines = []
-                    for det in detections:
-                        # Calculate direction
-                        x_center = det.get('x_center', 0.5)
-                        direction = "in the center"
-                        if x_center < 0.33: direction = "on the left"
-                        elif x_center > 0.66: direction = "on the right"
-                        
-                        # Proximity label
-                        distance = det['distance']
-                        proximity = "far"
-                        if distance < 2: proximity = "close"
-                        elif distance < 5: proximity = "medium"
-
-                        line = f"{det['class']} {direction} is {proximity}"
-                        info_text += f"- {line}\n"
-                        tts_lines.append(line)
-                    
-                    info_placeholder.text(info_text)
-                    tts_text = ". ".join(tts_lines)
-                    get_speak_worker().speak(tts_text)
+                    with info_placeholder:
+                        st.subheader("🔍 Detected Objects")
+                        tts_lines = []
+                        for det in detections:
+                            direction = (
+                                "Left" if det['x_center'] < 0.33 else
+                                "Right" if det['x_center'] > 0.66 else
+                                "Center"
+                            )
+                            proximity = (
+                                "🟥 Close" if det['distance'] < 2 else
+                                "🟨 Medium" if det['distance'] < 5 else
+                                "🟩 Far"
+                            )
+                            st.markdown(
+                                f"- **{det['class']}** {direction} | {proximity} | Confidence: `{det['confidence']:.2f}`"
+                            )
+                            tts_lines.append(f"{det['class']} {direction} is {proximity}")
+                        get_speak_worker().speak(". ".join(tts_lines))
                 else:
-                    info_placeholder.text("No objects detected")
+                    info_placeholder.info("No objects detected.")
 
-            # --- Frame Display (always run) ---
-            # Use the latest annotated_frame, or the raw frame if none exists yet
+            # Display current frame
             display_frame = annotated_frame if annotated_frame is not None else frame
-            
-            # Add FPS text to the frame that will be displayed
-            cv2.putText(display_frame, f"FPS: {fps}", (10, 30), 
+            cv2.putText(display_frame, f"FPS: {fps}", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            
-            # Display the frame
-            frame_placeholder.image(display_frame, channels="BGR", use_container_width=True)
-            
-            # Display FPS separately for clarity
-            fps_placeholder.text(f"Current FPS: {fps}")
+            frame_placeholder.image(display_frame, channels="BGR", use_column_width=True)
+            fps_placeholder.markdown(f"### ⏱️ Current FPS: `{fps}`")
 
     except Exception as e:
-        st.error(f"An error occurred during video processing: {e}")
+        st.error(f"❌ Error: {e}")
     finally:
-        if cap.isOpened():
-            cap.release()
+        cap.release()
