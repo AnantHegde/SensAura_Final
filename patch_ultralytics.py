@@ -1,9 +1,3 @@
-import os
-import sys
-import threading
-import warnings
-warnings.filterwarnings('ignore')
-
 def patch_ultralytics():
     """Patch ultralytics to handle signals only in main thread"""
     try:
@@ -11,16 +5,17 @@ def patch_ultralytics():
         from pathlib import Path
         
         # Get the path to the session.py file
-        session_path = Path(ultralytics._file_).parent / 'hub' / 'session.py'
+        # Update this path based on your actual file location
+        session_path = Path(ultralytics.__path__[0]) / 'hub/session.py'
         
         if not session_path.exists():
             print("Could not find ultralytics session.py file")
             return
-            
+        
         # Read the current content
         with open(session_path, 'r') as f:
             content = f.read()
-            
+        
         # Add thread check before signal handling
         if 'signal.signal(signal.SIGTERM, signal_handler)' in content:
             modified_content = content.replace(
@@ -37,6 +32,3 @@ def patch_ultralytics():
             
     except Exception as e:
         print(f"Failed to patch ultralytics: {str(e)}")
-
-# Apply the patch
-patch_ultralytics()
