@@ -82,29 +82,10 @@ This mobile app is an extra showcase to demonstrate the potential of SensAura AI
 Video Demo of working app: https://drive.google.com/file/d/1FMOnMlKLOvGjhodKRlg-YCvSXn1-f4Ei/view?usp=sharing
 
 
-## Architecture
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant StreamlitApp
-    participant OpenCV
-    participant YOLOModel
-    participant TTS
-    User->>StreamlitApp: Interacts with UI (e.g., clicks 'Start Camera')
-    StreamlitApp->>OpenCV: Captures video frame (cv2.VideoCapture)
-    OpenCV->>StreamlitApp: Returns video frame
-    StreamlitApp->>YOLOModel: Performs object detection (model.predict)
-    YOLOModel->>StreamlitApp: Returns detection results
-    StreamlitApp->>StreamlitApp: Processes detection results (bounding boxes, labels)
-    StreamlitApp->>TTS: Sends detected object information for speech
-    TTS->>User: Announces detected objects
-    StreamlitApp->>StreamlitApp: Displays annotated frame with bounding boxes
-    StreamlitApp->>User: Updates UI with video and information
+## Notes:
 
-
-Notes:
-Ensure your webcam is properly connected and accessible.
-For RTSP streams, verify the URL and credentials.
-Adjust the KNOWN_WIDTH and FOCAL_LENGTH constants in app.py for accurate distance estimation.
-The application uses yolov8n.pt by default, you can change the model in settings.py.
+* Ensure your webcam is properly connected and accessible.
+* For RTSP streams, verify the URL and credentials.
+* Adjust the KNOWN_WIDTH and FOCAL_LENGTH constants in app.py for accurate distance estimation.
+* The application uses yolov8n.pt by default, you can change the model in settings.py.
