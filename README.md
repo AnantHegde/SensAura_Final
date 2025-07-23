@@ -66,10 +66,6 @@ Sensaura is a real-time object detection application built using Streamlit and Y
         *   The main panel displays the live video feed with bounding boxes around detected objects.
         *   The application provides textual information about detected objects, including class names, proximity, and direction.
         *   Text-to-Speech (TTS) output announces the detected objects.
-    *   **Other Modes (in `helper.py` and `simple_app.py`):**
-        *   **YouTube:** Enter a YouTube video URL to detect objects in the video stream.
-        *   **RTSP Stream:** Enter an RTSP stream URL to detect objects in the live stream.
-        *   **Video:** Choose a stored video file to detect objects.
 
 ## e. Demo of SensAura in action:
 
@@ -105,6 +101,5 @@ sequenceDiagram
 
 Notes:
 Ensure your webcam is properly connected and accessible.
-For RTSP streams, verify the URL and credentials.
 Adjust the KNOWN_WIDTH and FOCAL_LENGTH constants in app.py for accurate distance estimation.
 The application uses yolov8n.pt by default, you can change the model in settings.py.
